@@ -2,41 +2,64 @@
 
 import { useState, FormEvent } from "react";
 
-// IMPORTANTE: este formulario necesita un endpoint que reciba el POST.
-// La opción más simple sin backend propio es Formspree (gratis hasta 50 envíos/mes):
-// 1. Crea una cuenta en https://formspree.io
-// 2. Crea un formulario y copia tu endpoint, ej: https://formspree.io/f/abc123xy
-// 3. Pégalo abajo en ENDPOINT_FORMULARIO.
+// Formulario conectado a Formspree. Si en algún momento cambias de cuenta,
+// reemplaza este endpoint por el nuevo (Formspree → tu formulario → Settings → Endpoint).
 const ENDPOINT_FORMULARIO = "https://formspree.io/f/mlgylyjk";
 
 export function FormularioContacto() {
   const [estado, setEstado] = useState<"idle" | "enviando" | "exito" | "error">("idle");
+  const [mensajeError, setMensajeError] = useState<string | null>(null);
 
   async function manejarEnvio(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!ENDPOINT_FORMULARIO) {
       setEstado("error");
+      setMensajeError("El formulario no está conectado todavía.");
       return;
     }
 
     setEstado("enviando");
+    setMensajeError(null);
+
     const formData = new FormData(e.currentTarget);
+    const datos = Object.fromEntries(formData.entries());
 
     try {
       const res = await fetch(ENDPOINT_FORMULARIO, {
         method: "POST",
-        body: formData,
-        headers: { Accept: "application/json" },
+        body: JSON.stringify(datos),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
+
       if (res.ok) {
         setEstado("exito");
         e.currentTarget.reset();
-      } else {
-        setEstado("error");
+        return;
       }
+
+      // Formspree devuelve detalle del error en el cuerpo JSON cuando algo falla
+      // (formulario desactivado, falta verificar el correo, límite alcanzado, etc.)
+      let detalle = `Código de error: ${res.status}.`;
+      try {
+        const cuerpo = await res.json();
+        if (cuerpo?.errors?.length) {
+          detalle = cuerpo.errors.map((er: { message?: string }) => er.message).filter(Boolean).join(" ");
+        } else if (cuerpo?.error) {
+          detalle = cuerpo.error;
+        }
+      } catch {
+        // si el cuerpo no es JSON, nos quedamos con el código de estado
+      }
+
+      setEstado("error");
+      setMensajeError(detalle);
     } catch {
       setEstado("error");
+      setMensajeError("No se pudo conectar con el servidor de envío. Revisa tu conexión e intenta de nuevo.");
     }
   }
 
@@ -100,7 +123,9 @@ export function FormularioContacto() {
       </button>
 
       {estado === "error" && ENDPOINT_FORMULARIO && (
-        <p className="text-sm text-red-700">No se pudo enviar. Intenta de nuevo en un momento.</p>
+        <p className="text-sm text-red-700">
+          No se pudo enviar. {mensajeError ?? "Intenta de nuevo en un momento."}
+        </p>
       )}
     </form>
   );
