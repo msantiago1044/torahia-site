@@ -37,7 +37,7 @@ export function GrillaVideos() {
   if (videos.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-pergamino-oscuro p-8 text-center">
-        <p className="text-sm text-tinta-suave max-w-md mx-auto">
+        <p className="text-sm text-tinta-suave max-w-lg mx-auto">
           {aviso ?? "Todavía no hay videos para mostrar aquí."}
         </p>
         <a

@@ -27,16 +27,56 @@ export async function GET() {
     );
   }
 
+  const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${canalId}`;
+
   try {
-    const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${canalId}`;
-    const res = await fetch(feedUrl, { next: { revalidate: 3600 } });
+    const res = await fetch(feedUrl, {
+      next: { revalidate: 3600 },
+      headers: {
+        // Algunos servidores de YouTube rechazan peticiones sin un User-Agent
+        // de navegador real cuando vienen de un servidor (no de un navegador).
+        "User-Agent":
+          "Mozilla/5.0 (compatible; TorahDiariaSite/1.0; +https://torahia.site)",
+      },
+    });
 
     if (!res.ok) {
-      return NextResponse.json({ videos: [], aviso: "No se pudo leer el feed del canal." }, { status: 200 });
+      // Reportamos el código real para poder diagnosticar:
+      // 404 = el channel_id no existe o está mal escrito.
+      // 400 = formato de la URL inválido.
+      // otros = problema temporal de YouTube.
+      return NextResponse.json(
+        {
+          videos: [],
+          aviso: `YouTube respondió con error ${res.status} para el canal configurado. Verifica que el Channel ID "${canalId}" sea exactamente el de YouTube Studio → Personalización → Básica (debe empezar con "UC" y tener 24 caracteres).`,
+        },
+        { status: 200 }
+      );
     }
 
     const xml = await res.text();
+
+    // Si el feed cargó pero no tiene el tag <feed>, algo vino mal formado
+    // (por ejemplo una página de error HTML en vez de XML).
+    if (!xml.includes("<feed")) {
+      return NextResponse.json(
+        { videos: [], aviso: "YouTube no devolvió un feed válido para este canal." },
+        { status: 200 }
+      );
+    }
+
     const entradas = xml.split("<entry>").slice(1);
+
+    if (entradas.length === 0) {
+      return NextResponse.json(
+        {
+          videos: [],
+          aviso:
+            "El canal existe pero el feed no tiene videos públicos todavía (los videos no listados o privados no aparecen aquí).",
+        },
+        { status: 200 }
+      );
+    }
 
     const videos: VideoFeed[] = entradas.slice(0, 6).map((entrada) => {
       const id = entrada.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1] ?? "";
@@ -47,7 +87,11 @@ export async function GET() {
     });
 
     return NextResponse.json({ videos, canalUrl });
-  } catch {
-    return NextResponse.json({ videos: [], aviso: "Error al conectar con YouTube." }, { status: 200 });
+  } catch (error) {
+    const detalle = error instanceof Error ? error.message : "error desconocido";
+    return NextResponse.json(
+      { videos: [], aviso: `No se pudo conectar con YouTube (${detalle}).` },
+      { status: 200 }
+    );
   }
 }
