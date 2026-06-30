@@ -41,25 +41,34 @@ function mapearNombreHebcalASlugs(nombreEn: string): string[] {
 
 export async function GET() {
   const hoy = new Date();
-  // Pedimos un rango amplio: desde 1 mes atrás hasta ~13 meses adelante,
-  // para cubrir el ciclo completo de 54 parashot sin importar en qué
-  // punto del año hebreo estemos (cubre meses embolismales también).
+  // Pedimos un rango que cubra el ciclo completo de 54 parashot (~52-55 semanas)
+  // tanto hacia atrás como hacia adelante desde hoy, para que cualquier parashá
+  // del ciclo actual (ya leída o por leer) tenga su fecha real disponible,
+  // sin importar en qué punto del año hebreo estemos.
   const inicio = new Date(hoy);
-  inicio.setUTCMonth(inicio.getUTCMonth() - 1);
+  inicio.setUTCMonth(inicio.getUTCMonth() - 13);
   const fin = new Date(hoy);
   fin.setUTCMonth(fin.getUTCMonth() + 13);
 
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
   try {
-    // Hebcal trunca a 180 días por solicitud, así que dividimos el rango en 2 llamadas.
-    const medio = new Date(inicio);
-    medio.setUTCDate(medio.getUTCDate() + 179);
+    // Hebcal trunca a 180 días por solicitud, así que dividimos el rango total
+    // (~26 meses) en tramos de ~175 días cada uno.
+    const tramoDias = 175;
+    const rangos: { desde: Date; hasta: Date }[] = [];
+    let cursor = new Date(inicio);
+    while (cursor < fin) {
+      const hasta = new Date(cursor);
+      hasta.setUTCDate(hasta.getUTCDate() + tramoDias);
+      rangos.push({ desde: new Date(cursor), hasta: hasta < fin ? hasta : fin });
+      cursor = new Date(hasta);
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
 
-    const urls = [
-      `https://www.hebcal.com/leyning?cfg=json&start=${fmt(inicio)}&end=${fmt(medio)}&i=off&triennial=off`,
-      `https://www.hebcal.com/leyning?cfg=json&start=${fmt(medio)}&end=${fmt(fin)}&i=off&triennial=off`,
-    ];
+    const urls = rangos.map(
+      (r) => `https://www.hebcal.com/leyning?cfg=json&start=${fmt(r.desde)}&end=${fmt(r.hasta)}&i=off&triennial=off`
+    );
 
     const respuestas = await Promise.all(
       urls.map((u) => fetch(u, { next: { revalidate: 86400 } }))
