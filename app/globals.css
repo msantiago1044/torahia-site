@@ -1,15 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  /* Color — pergamino y tinta, con acento tekhelet (el añil del tzitzit) */
-  --pergamino: #F7F2E7;
+  /* Color — pergamino y tinta, con acento tekhelet (el añil del tzitzit).
+     Afinado para coincidir con la paleta real del logo del canal. */
+  --pergamino: #FAF7F2;
   --pergamino-oscuro: #EAE0C9;
   --tinta: #1C1A16;
   --tinta-suave: #4A4538;
-  --tekhelet: #2C4A52;
-  --tekhelet-claro: #3E6470;
-  --sello: #A8632C;
-  --sello-claro: #C98341;
+  --tekhelet: #213A3A;
+  --tekhelet-claro: #3A5C5C;
+  --sello: #8C6C42;
+  --sello-claro: #B39371;
+
+  /* Estados del calendario: leída / esta semana / por leer.
+     Tres identidades claramente distintas, no solo variaciones de opacidad. */
+  --estado-leida-bg: #E8E2D4;
+  --estado-leida-borde: #D6CCB4;
+  --estado-leida-texto: #8C8470;
+  --estado-actual-bg: #213A3A;
+  --estado-actual-texto: #FAF7F2;
+  --estado-actual-acento: #C98341;
+  --estado-futura-bg: #FAF7F2;
+  --estado-futura-borde: #D6CCB4;
 
   --background: var(--pergamino);
   --foreground: var(--tinta);
@@ -26,6 +38,15 @@
   --color-sello-claro: var(--sello-claro);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-estado-leida-bg: var(--estado-leida-bg);
+  --color-estado-leida-borde: var(--estado-leida-borde);
+  --color-estado-leida-texto: var(--estado-leida-texto);
+  --color-estado-actual-bg: var(--estado-actual-bg);
+  --color-estado-actual-texto: var(--estado-actual-texto);
+  --color-estado-actual-acento: var(--estado-actual-acento);
+  --color-estado-futura-bg: var(--estado-futura-bg);
+  --color-estado-futura-borde: var(--estado-futura-borde);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);

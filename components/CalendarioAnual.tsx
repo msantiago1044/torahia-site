@@ -72,15 +72,15 @@ export function CalendarioAnual() {
 
       <section className="mx-auto max-w-6xl px-5 py-14 sm:py-16 space-y-14">
         {/* Leyenda */}
-        <div className="flex flex-wrap gap-5 text-xs font-utility text-tinta-suave">
+        <div className="flex flex-wrap gap-6 text-xs font-utility text-tinta-suave">
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-tekhelet inline-block" /> esta semana
+            <span className="w-3 h-3 rounded-sm bg-estado-actual-bg inline-block" /> esta semana
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm border border-pergamino-oscuro bg-pergamino inline-block" /> por leer
+            <span className="w-3 h-3 rounded-sm border border-estado-futura-borde bg-estado-futura-bg inline-block" /> por leer
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-pergamino-oscuro/50 inline-block" /> ya leída
+            <span className="w-3 h-3 rounded-sm border border-estado-leida-borde bg-estado-leida-bg inline-block" /> ya leída
           </span>
         </div>
 
@@ -118,12 +118,18 @@ function TarjetaParasha({
   fecha?: FechaParasha;
   cargando: boolean;
 }) {
+  // Tres identidades visuales realmente distintas, no solo variaciones de opacidad:
+  // "actual" = fondo sólido oscuro (hito de la semana), "leída" = fondo apagado con
+  // texto atenuado, "futura"/"sin-fecha" = estilo normal del sitio.
   const estilosPorEstado: Record<EstadoParasha, string> = {
-    actual: "border-tekhelet bg-tekhelet/5",
-    futura: "border-pergamino-oscuro hover:border-tekhelet/50",
-    pasada: "border-pergamino-oscuro/50 bg-pergamino-oscuro/20 opacity-60 hover:opacity-90",
-    "sin-fecha": "border-pergamino-oscuro hover:border-tekhelet/50",
+    actual: "border-estado-actual-bg bg-estado-actual-bg shadow-sm",
+    futura: "border-estado-futura-borde bg-estado-futura-bg hover:border-tekhelet/50",
+    pasada: "border-estado-leida-borde bg-estado-leida-bg hover:bg-estado-leida-bg/60",
+    "sin-fecha": "border-estado-futura-borde bg-estado-futura-bg hover:border-tekhelet/50",
   };
+
+  const esActual = estado === "actual";
+  const esPasada = estado === "pasada";
 
   return (
     <Link
@@ -131,25 +137,42 @@ function TarjetaParasha({
       className={`group rounded-lg border p-4 transition-all ${estilosPorEstado[estado]}`}
     >
       <div className="flex items-center justify-between mb-1">
-        <span className="font-utility text-[10px] text-tinta-suave/60">
+        <span
+          className={`font-utility text-[10px] ${
+            esActual ? "text-estado-actual-texto/60" : esPasada ? "text-estado-leida-texto" : "text-tinta-suave/60"
+          }`}
+        >
           {String(parasha.numero).padStart(2, "0")}
         </span>
-        {estado === "actual" && (
-          <span className="font-utility text-[10px] uppercase text-tekhelet">esta semana</span>
+        {esActual && (
+          <span className="flex items-center gap-1 font-utility text-[10px] uppercase text-estado-actual-acento">
+            <span className="w-1.5 h-1.5 rounded-full bg-estado-actual-acento inline-block" />
+            esta semana
+          </span>
         )}
-        {estado === "pasada" && (
-          <span className="font-utility text-[10px] uppercase text-tinta-suave/50">leída</span>
+        {esPasada && (
+          <span className="font-utility text-[10px] uppercase text-estado-leida-texto">✓ leída</span>
         )}
       </div>
-      <p className="font-display text-lg font-medium text-tinta group-hover:text-tekhelet transition-colors">
+      <p
+        className={`font-display text-lg font-medium transition-colors ${
+          esActual
+            ? "text-estado-actual-texto"
+            : esPasada
+              ? "text-estado-leida-texto group-hover:text-tinta-suave"
+              : "text-tinta group-hover:text-tekhelet"
+        }`}
+      >
         {parasha.nombre}
       </p>
-      <p className="font-utility text-xs text-sello mt-0.5">{parasha.cita}</p>
+      <p className={`font-utility text-xs mt-0.5 ${esActual ? "text-estado-actual-acento" : esPasada ? "text-estado-leida-texto/70" : "text-sello"}`}>
+        {parasha.cita}
+      </p>
 
       {cargando ? (
         <div className="mt-2 h-3 w-32 rounded bg-pergamino-oscuro/40 animate-pulse" />
       ) : fecha ? (
-        <p className="mt-2 font-utility text-[11px] text-tinta-suave/70">
+        <p className={`mt-2 font-utility text-[11px] ${esActual ? "text-estado-actual-texto/70" : "text-tinta-suave/70"}`}>
           {formatearRangoSemana(fecha.fechaInicio)}
         </p>
       ) : null}

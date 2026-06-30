@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { sitio } from "@/data/config";
 
 type VideoFeed = {
@@ -14,15 +14,27 @@ export function GrillaVideos() {
   const [videos, setVideos] = useState<VideoFeed[] | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
-  useEffect(() => {
+  const cargar = useCallback(() => {
     fetch("/api/videos")
       .then((r) => r.json())
       .then((data) => {
         setVideos(data.videos ?? []);
         setAviso(data.aviso ?? null);
       })
-      .catch(() => setAviso("No se pudieron cargar los videos en este momento."));
+      .catch(() => {
+        setVideos([]);
+        setAviso("No se pudieron cargar los videos en este momento.");
+      });
   }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  function reintentar() {
+    setVideos(null);
+    cargar();
+  }
 
   if (videos === null) {
     return (
@@ -40,14 +52,22 @@ export function GrillaVideos() {
         <p className="text-sm text-tinta-suave max-w-lg mx-auto">
           {aviso ?? "Todavía no hay videos para mostrar aquí."}
         </p>
-        <a
-          href={sitio.youtube.canalUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-block text-sm font-medium text-tekhelet hover:text-tekhelet-claro"
-        >
-          Ver el canal completo →
-        </a>
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <button
+            onClick={reintentar}
+            className="text-sm font-medium text-tekhelet hover:text-tekhelet-claro"
+          >
+            ↻ Reintentar
+          </button>
+          <a
+            href={sitio.youtube.canalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-tekhelet hover:text-tekhelet-claro"
+          >
+            Ver el canal completo →
+          </a>
+        </div>
       </div>
     );
   }
