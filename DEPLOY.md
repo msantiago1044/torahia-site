@@ -115,11 +115,27 @@ check verde, el sitio está en vivo en `https://torahia.site`.
 ---
 
 ## Variables de entorno
-No se requieren para que el sitio funcione (el feed de YouTube usa RSS
-público con el `canalId` que ya configuramos, sin necesidad de API key).
+
+Para el feed de YouTube no se requiere ninguna (usa RSS público).
+
+Para el **CMS de contenido (Sanity)**, agrega en Vercel/Netlify:
+
+| Variable | Valor |
+|---|---|
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | el Project ID de tu Sanity Studio |
+| `NEXT_PUBLIC_SANITY_DATASET` | `production` (o el que hayas usado) |
+
+Ver la guía completa de configuración de Sanity en `README.md`. El sitio
+funciona perfectamente sin estas variables — simplemente no tendrá el
+contenido extendido de cada parashá hasta que las agregues.
+
+En **Vercel**: Settings → Environment Variables → Add. En **Netlify**:
+Site settings → Environment variables → Add a variable. En ambos casos,
+después de agregarlas necesitas volver a desplegar (Redeploy) para que
+tomen efecto.
 
 ## Próximos pasos opcionales
-- **CMS** para editar el contenido largo de cada parashá sin tocar código (Sanity, Notion-as-CMS).
+
 - **Newsletter real** para el botón "Suscribirme" (Mailchimp, Buttondown, ConvertKit).
 - **Analítica**: Vercel Analytics (un click, plan gratuito) o Plausible/Google Analytics.
 - **API de YouTube Data v3** si más adelante quieres mostrar duración o vistas de cada video.

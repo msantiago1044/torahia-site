@@ -2,8 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Navegacion } from "@/components/Navegacion";
 import { Pie } from "@/components/Pie";
+import { BadgeEstadoParasha } from "@/components/BadgeEstadoParasha";
+import { ContenidoEstudio } from "@/components/ContenidoEstudio";
 import { parashot, getParashaPorSlug, getParashaSiguiente, getParashaAnterior } from "@/data/parashot";
-import { getParashaDeLaSemana } from "@/lib/calendario";
+import { getEstudioParasha } from "@/sanity/lib/queries";
+
+export const revalidate = 3600; // revalida el contenido de Sanity cada hora
 
 export function generateStaticParams() {
   return parashot.map((p) => ({ slug: p.slug }));
@@ -26,7 +30,7 @@ export default async function ParashaPage({ params }: { params: Promise<{ slug: 
 
   const anterior = getParashaAnterior(p.numero);
   const siguiente = getParashaSiguiente(p.numero);
-  const esLaActual = getParashaDeLaSemana().slug === p.slug;
+  const estudio = await getEstudioParasha(p.slug);
 
   return (
     <>
@@ -42,28 +46,13 @@ export default async function ParashaPage({ params }: { params: Promise<{ slug: 
               <span className="font-utility text-xs uppercase text-tekhelet">
                 Parashá Nº {p.numero} de 54 · {p.libro}
               </span>
-              {esLaActual && (
-                <span className="font-utility text-xs uppercase bg-tekhelet/10 text-tekhelet px-2 py-0.5 rounded-full">
-                  Esta semana
-                </span>
-              )}
+              <BadgeEstadoParasha slug={p.slug} />
             </div>
             <h1 className="font-display text-5xl font-semibold text-tinta leading-tight">{p.nombre}</h1>
             <p className="mt-3 font-utility text-base text-sello">{p.cita}</p>
           </header>
 
-          <p className="text-lg text-tinta-suave leading-relaxed mb-10">{p.resumen}</p>
-
-          <div className="rounded-lg border border-dashed border-pergamino-oscuro p-6 mb-10 bg-pergamino-oscuro/20">
-            <p className="font-utility text-xs uppercase text-tekhelet mb-2">Espacio para tu comentario</p>
-            <p className="text-sm text-tinta-suave">
-              Aquí puedes ampliar con el desarrollo completo del estudio: contexto histórico, preguntas
-              del texto, comentaristas clásicos (Rashi, Ramban, etc.) y la enseñanza práctica de la semana.
-              Edita este contenido en{" "}
-              <code className="font-utility text-xs">app/parasha/[slug]/page.tsx</code> o conéctalo a un CMS
-              (ver sección de conexiones recomendadas).
-            </p>
-          </div>
+          <ContenidoEstudio estudio={estudio} resumenCorto={p.resumen} slug={p.slug} />
 
           <nav className="flex items-center justify-between border-t border-pergamino-oscuro pt-8">
             {anterior ? (

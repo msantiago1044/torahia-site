@@ -13,7 +13,7 @@ export const sitio = {
     canalUrl: "https://www.youtube.com/@TorahDiariaEspañol",
     // Reemplaza por el ID real de un video destacado para incrustarlo en el hero.
     // Se obtiene de la URL: youtube.com/watch?v=ESTE_ES_EL_ID
-    videoDestacadoId: "",
+    videoDestacadoId: "5KV8f37yi7E",
     // ID del canal (visible en YouTube Studio > Personalización > Básica),
     // se usa para construir el feed de "últimos videos" vía RSS.
     canalId: "UCjdPLAkFqA4lyjillCHCA5Q",
@@ -29,7 +29,7 @@ export const sitio = {
   },
 
   contacto: {
-    email: "[email protected]",
+    email: "torahdiaria31@gmail.com",
   },
 
   donaciones: {
